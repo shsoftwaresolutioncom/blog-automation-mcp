@@ -1,0 +1,45 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "com.blog-automation/mcp",
+  "title": "Blog Automation",
+  "description": "Plan ideas, write blog articles with AI, publish or schedule them on WordPress, Shopify and 30+ platforms.",
+  "version": "1.0.0",
+  "websiteUrl": "https://blog-automation.com",
+  "repository": {
+    "url": "https://github.com/shsoftwaresolutioncom/blog-automation-mcp",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@blogautomation/mcp-server",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "BA_API_KEY",
+          "description": "Blog Automation API key (ba_live_\u2026, Entwickler / API)",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.blog-automation.com/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Bearer ba_live_\u2026 (Blog Automation API key)",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
