@@ -5,7 +5,10 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { createClient, KEY_RE } from './api.js';
 import { registerTools } from './tools.js';
 
-export const VERSION = '1.0.1';
+export const VERSION = '1.1.0';
+export const DEFAULT_RESOURCE = 'https://mcp.blog-automation.com/mcp';
+export const DEFAULT_ISSUER = 'https://app.blog-automation.com';
+const SCOPES = ['articles:read', 'articles:write', 'articles:publish', 'ai:generate', 'ideas:read', 'ideas:write', 'templates:read', 'sites:read', 'account:read'];
 const INSTRUCTIONS = 'Blog Automation plans, writes and publishes blog articles to WordPress. Typical flow: list_sites → list_ideas / create_idea → write_article (uses tokens – check token_balance and confirm) → article_status → publish_article (public – confirm). Article ids, idea ids and site ids are integers.';
 
 /** one MCP server bound to one API key */
@@ -21,12 +24,20 @@ const rpcError = (res, code, message, headers) => send(res, code, { jsonrpc: '2.
 /**
  * Streamable HTTP on /mcp. Stateless: every POST builds a fresh server with the key from "Authorization: Bearer ba_live_…".
  * The key is only used for that request's API calls – not stored, not logged. Browsers: Origin must be in `origins` (DNS rebinding).
+ * OAuth (ChatGPT apps, Claude, other MCP clients): /.well-known/oauth-protected-resource names Blog Automation as authorization server
+ * (RFC 9728); its access tokens are API keys, so the same Bearer check applies. Without a token the 401 points to that metadata.
  */
-export function createHttpServer({ base, fetch, origins = [], maxBody = 1024 * 1024, log = () => {} } = {}) {
+export function createHttpServer({ base, fetch, origins = [], maxBody = 1024 * 1024, log = () => {}, resource = process.env.BA_MCP_RESOURCE || DEFAULT_RESOURCE,
+  issuer = process.env.BA_OAUTH_ISSUER || DEFAULT_ISSUER } = {}) {
   const allowed = new Set(origins.map((o) => o.replace(/\/+$/, '').toLowerCase()));
+  const metaUrl = new URL('/.well-known/oauth-protected-resource', resource).toString();
+  const prm = { resource, authorization_servers: [issuer], bearer_methods_supported: ['header'], scopes_supported: SCOPES,
+    resource_name: 'Blog Automation', resource_documentation: 'https://blog-automation.com/entwickler/' };
   return http.createServer(async (req, res) => {
     const path = (req.url || '/').split('?')[0];
     if (path === '/healthz') return send(res, 200, { ok: true, name: 'blog-automation-mcp', version: VERSION });
+    if (path === '/.well-known/oauth-protected-resource' || path === '/.well-known/oauth-protected-resource/mcp') return send(res, 200, prm, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=3600' });
+    if (path === '/.well-known/oauth-authorization-server') return send(res, 302, { location: `${issuer}/.well-known/oauth-authorization-server` }, { Location: `${issuer}/.well-known/oauth-authorization-server` });
     if (path !== '/mcp') return send(res, 404, { error: 'not_found' });
     const origin = req.headers.origin;
     if (origin && !allowed.has(String(origin).toLowerCase())) return rpcError(res, 403, 'Origin not allowed.');
@@ -37,7 +48,7 @@ export function createHttpServer({ base, fetch, origins = [], maxBody = 1024 * 1
     }
     if (req.method !== 'POST') return rpcError(res, 405, 'Method not allowed (stateless server: POST only).', { Allow: 'POST, OPTIONS', ...cors });
     const m = /^Bearer\s+(\S+)$/i.exec(String(req.headers.authorization || ''));
-    if (!m || !KEY_RE.test(m[1])) return rpcError(res, 401, 'Send your Blog Automation API key: Authorization: Bearer ba_live_…', { 'WWW-Authenticate': 'Bearer realm="blog-automation"', ...cors });
+    if (!m || !KEY_RE.test(m[1])) return rpcError(res, 401, 'Sign in with Blog Automation (OAuth) or send your API key: Authorization: Bearer ba_live_…', { 'WWW-Authenticate': `Bearer realm="blog-automation", resource_metadata="${metaUrl}"`, ...cors });
     let body;
     try {
       const chunks = []; let size = 0;

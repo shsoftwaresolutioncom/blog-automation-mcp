@@ -149,6 +149,12 @@ test('HTTP transport: /healthz, 401 without key, 403 for foreign Origin, 405 on 
     const post = (headers) => globalThis.fetch(`${url}/mcp`, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream', ...headers }, body: JSON.stringify(init) });
     const no = await post({});
     assert.equal(no.status, 401); assert.match(no.headers.get('www-authenticate'), /Bearer/);
+    assert.match(no.headers.get('www-authenticate'), /resource_metadata="https:\/\/mcp\.blog-automation\.com\/\.well-known\/oauth-protected-resource"/);
+    const prm = await (await globalThis.fetch(`${url}/.well-known/oauth-protected-resource`)).json();
+    assert.equal(prm.resource, 'https://mcp.blog-automation.com/mcp'); assert.deepEqual(prm.authorization_servers, ['https://app.blog-automation.com']);
+    assert.ok(prm.scopes_supported.includes('ai:generate'));
+    const as = await globalThis.fetch(`${url}/.well-known/oauth-authorization-server`, { redirect: 'manual' });
+    assert.equal(as.status, 302); assert.equal(as.headers.get('location'), 'https://app.blog-automation.com/.well-known/oauth-authorization-server');
     assert.equal((await post({ authorization: 'Bearer nope' })).status, 401);
     assert.equal((await post({ authorization: `Bearer ${KEY}`, origin: 'https://evil.example' })).status, 403);
     assert.equal((await post({ authorization: `Bearer ${KEY}`, origin: 'https://claude.ai' })).status, 200);
