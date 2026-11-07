@@ -3,7 +3,7 @@
   "name": "io.github.shsoftwaresolutioncom/blog-automation-mcp",
   "title": "Blog Automation",
   "description": "Write blog articles with AI and publish them to WordPress, Shopify and 30+ platforms.",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "websiteUrl": "https://blog-automation.com",
   "repository": {
     "url": "https://github.com/shsoftwaresolutioncom/blog-automation-mcp",
@@ -13,7 +13,7 @@
     {
       "registryType": "npm",
       "identifier": "@blogautomation/mcp-server",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "transport": {
         "type": "stdio"
       },

@@ -59,7 +59,17 @@ blog-automation-mcp --http --port 8787 --host 127.0.0.1 --origin https://chatgpt
 - Requests with an `Origin` header are only accepted from `--origin` / `BA_MCP_ORIGINS` (DNS-rebinding protection); without the option
   browser requests are refused, server-to-server calls (no Origin) work.
 - Binds 127.0.0.1 by default; put it behind the reverse proxy (TLS) for public use, e.g. `https://mcp.blog-automation.com/mcp`.
-- Clients that only do OAuth (no custom header) cannot use it yet – see SUBMISSION.md.
+- **OAuth (since 1.1.0):** clients that only do OAuth – ChatGPT apps / developer mode, Claude custom connectors, MCP Inspector – just get the
+  URL `https://mcp.blog-automation.com/mcp`. The 401 points to `/.well-known/oauth-protected-resource` (RFC 9728), which names
+  `https://app.blog-automation.com` as authorization server (dynamic client registration, PKCE S256). The person signs in to Blog Automation,
+  sees the requested permissions and clicks "Erlauben"; the access token is a 1-hour API key, refreshed automatically, revocable under
+  Entwickler / API. Env: `BA_MCP_RESOURCE` (public /mcp URL), `BA_OAUTH_ISSUER` (app base URL).
+
+### ChatGPT app
+
+ChatGPT → Settings → Apps & Connectors → Advanced → Developer mode → "Create" → name "Blog Automation", MCP server URL
+`https://mcp.blog-automation.com/mcp`, authentication **OAuth** → sign in → allow. All tools carry `readOnlyHint` / `destructiveHint`
+annotations, so ChatGPT asks before writing (tokens) or publishing. Listing in the ChatGPT app directory: SUBMISSION.md.
 
 `BA_API_BASE` overrides the API (e.g. `https://pre.blog-automation.com/api/v1/ext`).
 

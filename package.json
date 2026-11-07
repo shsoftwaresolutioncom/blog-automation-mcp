@@ -1,6 +1,6 @@
 {
   "name": "@blogautomation/mcp-server",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "MCP server for Blog Automation \u2013 plan ideas, write articles with AI, publish to WordPress, Shopify and 30+ platforms and check tokens from Claude, ChatGPT, Cursor and other MCP clients.",
   "type": "module",
   "license": "MIT",
