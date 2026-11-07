@@ -5,7 +5,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { createClient, KEY_RE } from './api.js';
 import { registerTools } from './tools.js';
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.0.1';
 const INSTRUCTIONS = 'Blog Automation plans, writes and publishes blog articles to WordPress. Typical flow: list_sites → list_ideas / create_idea → write_article (uses tokens – check token_balance and confirm) → article_status → publish_article (public – confirm). Article ids, idea ids and site ids are integers.';
 
 /** one MCP server bound to one API key */
